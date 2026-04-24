@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00ff88;
+    --accent2: #ff3366;
+    --accent3: #ffcc00;
+    --text: #e8e8f0;
+    --muted: #666688;
+    --font-mono: 'Space Mono', monospace;
+    --font-sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+
+  h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  h1 span { color: var(--accent); }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+  }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Input area */
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .input-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 14px 16px;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .btn-secondary:hover { background: rgba(0,255,136,0.08); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    font-size: 11px;
+    padding: 8px 16px;
+  }
+
+  /* Chat messages */
+  .chat-area {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .msg {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 85%;
+  }
+
+  .msg-user {
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.2);
+    align-self: flex-end;
+    color: var(--text);
+  }
+
+  .msg-agent {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    color: var(--text);
+  }
+
+  .msg-agent strong {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  /* Extracted data */
+  .extracted-card {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .extracted-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .extracted-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .field-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .field-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .field-value.call { color: var(--accent); }
+  .field-value.put { color: var(--accent2); }
+  .field-value.premium { color: var(--accent3); }
+
+  /* Conviction bar */
+  .conviction-bar {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .conv-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+
+  .conv-dot.filled { background: var(--accent); }
+  .conv-dot.filled.high { background: var(--accent3); }
+
+  /* Cost estimate */
+  .cost-box {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 204, 0, 0.06);
+    border: 1px solid rgba(255, 204, 0, 0.3);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cost-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .cost-value { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--accent3); }
+
+  /* Trades list */
+  .trades-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .trade-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .trade-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+  .trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .trade-ticker {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .trade-ticker .strike { color: var(--accent); }
+  .trade-ticker .type-call { color: var(--accent); }
+  .trade-ticker .type-put { color: var(--accent2); }
+
+  .trade-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .badge-open { background: rgba(0,255,136,0.1); color: var(--accent); border: 1px solid rgba(0,255,136,0.3); }
+  .badge-closed { background: rgba(255,51,102,0.1); color: var(--accent2); border: 1px solid rgba(255,51,102,0.3); }
+  .badge-win { background: rgba(0,255,136,0.15); color: var(--accent); }
+  .badge-loss { background: rgba(255,51,102,0.15); color: var(--accent2); }
+
+  .catalysts-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .catalyst-tag {
+    padding: 3px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .pnl-display {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .pnl-positive { color: var(--accent); }
+  .pnl-negative { color: var(--accent2); }
+
+  /* Trade detail modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-overlay.active { display: flex; align-items: flex-start; justify-content: center; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .post-analysis-box {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-top: 16px;
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--font-mono);
+  }
+
+  .analysis-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    margin-top: 28px;
+  }
+
+  /* Loading */
+  .loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tesis-check {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tesis-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .tesis-btn.yes { border-color: var(--accent); color: var(--accent); }
+  .tesis-btn.no { border-color: var(--accent2); color: var(--accent2); }
+  .tesis-btn:hover { opacity: 0.7; }
+
+  @media (max-width: 480px) {
+    .extracted-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="logo">// Paper Trading Journal</div>
+        <h1>Trade <span>Log</span></h1>
+      </div>
+      <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="showTab('new')">+ Nuevo</button>
+        <button class="tab-btn" onclick="showTab('trades'); loadTrades()">Trades</button>
+        <button class="tab-btn" onclick="showTab('stats'); loadStats()">Stats</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- NEW TRADE -->
+  <section id="tab-new" class="section active">
+    <div class="input-card">
+      <span class="input-label">// Describe tu análisis</span>
+      <div class="chat-area" id="chatArea"></div>
+      
+      <textarea id="mainInput" placeholder="Ej: creo que SPY va a subir hoy porque es fin de mes y he visto flujo institucional positivo esta semana, bastante convencido..." rows="4"></textarea>
+      
+      <div class="btn-row">
+        <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">
+          <span>Analizar</span>
+        </button>
+        <button class="btn btn-secondary" id="resetBtn" onclick="resetFlow()" style="display:none">
+          Reiniciar
+        </button>
+      </div>
+    </div>
+
+    <div id="extractedArea" style="display:none">
+      <div class="extracted-card">
+        <div class="extracted-title">// Tesis Extraída</div>
+        <div class="extracted-grid" id="extractedGrid"></div>
+        <div class="cost-box" id="costBox" style="display:none">
+          <span class="cost-label">Riesgo máx. (1 contrato)</span>
+          <span class="cost-value" id="costValue">—</span>
+        </div>
+      </div>
+      <div class="btn-row" id="confirmRow" style="display:none">
+        <button class="btn btn-primary" onclick="confirmTrade()">✓ Registrar Trade</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRADES LIST -->
+  <section id="tab-trades" class="section">
+    <div class="trades-list" id="tradesList">
+      <div class="empty-state">
+        <div class="big">📋</div>
+        Cargando trades...
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section id="tab-stats" class="section">
+    <div id="statsArea">
+      <div class="empty-state">
+        <div class="big">📊</div>
+        Cargando estadísticas...
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- TRADE DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let currentExtracted = {};
+let conversationHistory = [];
+let rawAnalysis = '';
+let currentTradeId = null;
+
+// ── Tab navigation ────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Chat UI ───────────────────────────────────────────────────────────────
+function addMsg(text, role) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + role;
+  if (role === 'agent') {
+    div.innerHTML = '<strong>Agente</strong>' + text;
+  } else {
+    div.textContent = text;
+  }
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+// ── Analyze ───────────────────────────────────────────────────────────────
+async function analyze() {
+  const input = document.getElementById('mainInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span><span>Analizando...</span>';
+
+  addMsg(text, 'user');
+  rawAnalysis += (rawAnalysis ? '\n' : '') + text;
+  conversationHistory.push({ role: 'user', text });
+  input.value = '';
+
+  try {
+    const res = await fetch(API + '/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: rawAnalysis,
+        conversation: conversationHistory,
+        ticker_hint: currentExtracted.ticker || null
+      })
+    });
+    const data = await res.json();
+    currentExtracted = { ...currentExtracted, ...data.extracted };
+
+    // Show extracted data
+    renderExtracted(currentExtracted);
+
+    if (data.followup) {
+      addMsg(data.followup, 'agent');
+      conversationHistory.push({ role: 'agent', text: data.followup });
+      document.getElementById('confirmRow').style.display = 'none';
+    } else {
+      addMsg('✓ Tesis registrada. Revisa los datos y confirma el trade.', 'agent');
+      document.getElementById('confirmRow').style.display = 'flex';
+    }
+
+    document.getElementById('resetBtn').style.display = 'inline-flex';
+    document.getElementById('extractedArea').style.display = 'block';
+
+  } catch(e) {
+    addMsg('Error conectando con el servidor. ¿Está corriendo el backend?', 'agent');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>Enviar</span>';
+}
+
+// ── Render extracted data ─────────────────────────────────────────────────
+function renderExtracted(data) {
+  const grid = document.getElementById('extractedGrid');
+  const fields = [
+    { key: 'ticker', label: 'Activo' },
+    { key: 'option_type', label: 'Tipo' },
+    { key: 'strike', label: 'Strike' },
+    { key: 'timeframe', label: 'Timeframe' },
+    { key: 'conviction', label: 'Convicción' },
+    { key: 'current_price', label: 'Precio actual' },
+    { key: 'contracts', label: 'Contratos' },
+    { key: 'estimated_premium', label: 'Prima est.' },
+  ];
+
+  grid.innerHTML = fields.map(f => {
+    let val = data[f.key];
+    if (val === null || val === undefined) return '';
+    let cls = '';
+    let display = val;
+
+    if (f.key === 'option_type') {
+      cls = val.toLowerCase();
+      display = val.toUpperCase();
+    }
+    if (f.key === 'estimated_premium') {
+      cls = 'premium';
+      display = '$' + Number(val).toFixed(2);
+    }
+    if (f.key === 'current_price') display = '$' + Number(val).toFixed(2);
+    if (f.key === 'strike') display = '$' + val;
+
+    if (f.key === 'conviction') {
+      const dots = Array.from({length: 10}, (_, i) => {
+        const filled = i < val;
+        const high = val >= 7;
+        return `<div class="conv-dot ${filled ? 'filled' : ''} ${filled && high ? 'high' : ''}"></div>`;
+      }).join('');
+      return `<div class="field-item">
+        <div class="field-label">${f.label}</div>
+        <div class="field-value">${val}/10</div>
+        <div class="conviction-bar">${dots}</div>
+      </div>`;
+    }
+
+    return `<div class="field-item">
+      <div class="field-label">${f.label}</div>
+      <div class="field-value ${cls}">${display}</div>
+    </div>`;
+  }).join('');
+
+  // Catalysts
+  if (data.catalysts && data.catalysts.length) {
+    grid.innerHTML += `<div class="field-item" style="grid-column: 1/-1">
+      <div class="field-label">Catalizadores</div>
+      <div class="catalysts-row">
+        ${data.catalysts.map(c => `<span class="catalyst-tag">${c}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Cost box
+  if (data.estimated_premium) {
+    const cost = (data.estimated_premium * 100 * (data.contracts || 1)).toFixed(2);
+    document.getElementById('costBox').style.display = 'flex';
+    document.getElementById('costValue').textContent = '$' + cost;
+  }
+}
+
+// ── Confirm trade ─────────────────────────────────────────────────────────
+async function confirmTrade() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span><span>Registrando...</span>';
+
+  try {
+    const res = await fetch(API + '/api/trades', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        extracted: currentExtracted,
+        raw_analysis: rawAnalysis,
+        conversation: conversationHistory
+      })
+    });
+    const data = await res.json();
+    currentTradeId = data.id;
+
+    addMsg(`✅ Trade registrado (ID #${data.id}). Precio de entrada: $${data.entry_price?.toFixed(2) || '—'}. Te avisaré cuando cierre el mercado para el análisis post-trade.`, 'agent');
+    document.getElementById('confirmRow').style.display = 'none';
+    btn.innerHTML = '✓ Registrado';
+
+  } catch(e) {
+    addMsg('Error registrando el trade.', 'agent');
+    btn.disabled = false;
+    btn.innerHTML = '✓ Registrar Trade';
+  }
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────
+function resetFlow() {
+  currentExtracted = {};
+  conversationHistory = [];
+  rawAnalysis = '';
+  currentTradeId = null;
+  document.getElementById('chatArea').innerHTML = '';
+  document.getElementById('extractedArea').style.display = 'none';
+  document.getElementById('mainInput').value = '';
+  document.getElementById('resetBtn').style.display = 'none';
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<span>Analizar</span>';
+}
+
+// ── Load trades ───────────────────────────────────────────────────────────
+async function loadTrades() {
+  const list = document.getElementById('tradesList');
+  list.innerHTML = '<div class="empty-state"><div class="spinner" style="width:24px;height:24px;margin:0 auto"></div></div>';
+
+  const res = await fetch(API + '/api/trades');
+  const trades = await res.json();
+
+  if (!trades.length) {
+    list.innerHTML = '<div class="empty-state"><div class="big">📋</div>No hay trades aún. ¡Registra tu primer análisis!</div>';
+    return;
+  }
+
+  list.innerHTML = trades.map(t => {
+    const date = new Date(t.created_at).toLocaleString('es-CO', {dateStyle:'short', timeStyle:'short'});
+    const pnlHtml = t.pnl !== null 
+      ? `<span class="pnl-display ${t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl?.toFixed(0)} (${t.pnl_pct?.toFixed(0)}%)</span>`
+      : `<span class="badge badge-open">Abierto</span>`;
+    
+    const cats = (t.catalysts || []).map(c => `<span class="catalyst-tag">${c}</span>`).join('');
+
+    return `<div class="trade-card" onclick="openTrade(${t.id})">
+      <div class="trade-header">
+        <div>
+          <span class="trade-ticker">
+            ${t.ticker || '?'}
+            ${t.strike ? `<span class="strike"> $${t.strike}</span>` : ''}
+            ${t.option_type ? `<span class="type-${t.option_type}"> ${t.option_type.toUpperCase()}</span>` : ''}
+          </span>
+          <div class="trade-date">${date}</div>
+        </div>
+        ${pnlHtml}
+      </div>
+      ${cats ? `<div class="catalysts-row">${cats}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Open trade modal ──────────────────────────────────────────────────────
+async function openTrade(id) {
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('modalBody').innerHTML = '<div class="loading"><span class="spinner"></span> Cargando...</div>';
+
+  const res = await fetch(API + '/api/trades/' + id);
+  const t = await res.json();
+
+  const date = new Date(t.created_at).toLocaleString('es-CO', {dateStyle:'long', timeStyle:'short'});
+  const cats = (t.catalysts || []).map(c => `<span class="catalyst-tag">${c}</span>`).join('');
+
+  let closeSection = '';
+  if (t.status === 'open') {
+    closeSection = `
+      <hr>
+      <div class="section-title">// Cerrar Trade</div>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:10px">¿La tesis se cumplió?</p>
+      <div class="tesis-check">
+        <button class="tesis-btn yes" onclick="closeTrade(${t.id}, true)">✓ Sí se cumplió</button>
+        <button class="tesis-btn no" onclick="closeTrade(${t.id}, false)">✗ No se cumplió</button>
+      </div>`;
+  }
+
+  let postSection = '';
+  if (t.post_analysis) {
+    postSection = `
+      <div class="section-title">// Análisis Post-Trade</div>
+      <div class="post-analysis-box">${t.post_analysis}</div>`;
+  }
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="extracted-title" style="margin-bottom:6px">#${t.id} — ${date}</div>
+    <div class="trade-ticker">
+      ${t.ticker || '?'}
+      ${t.strike ? `<span class="strike"> $${t.strike}</span>` : ''}
+      ${t.option_type ? `<span class="type-${t.option_type}"> ${t.option_type.toUpperCase()}</span>` : ''}
+    </div>
+    <div style="margin:12px 0">
+      ${cats ? `<div class="catalysts-row">${cats}</div>` : ''}
+    </div>
+    <div class="extracted-grid">
+      ${t.conviction ? `<div class="field-item"><div class="field-label">Convicción</div><div class="field-value">${t.conviction}/10</div></div>` : ''}
+      ${t.entry_price ? `<div class="field-item"><div class="field-label">Precio entrada</div><div class="field-value">$${t.entry_price?.toFixed(2)}</div></div>` : ''}
+      ${t.estimated_premium ? `<div class="field-item"><div class="field-label">Prima est.</div><div class="field-value premium">$${t.estimated_premium}</div></div>` : ''}
+      ${t.timeframe ? `<div class="field-item"><div class="field-label">Timeframe</div><div class="field-value">${t.timeframe}</div></div>` : ''}
+      ${t.pnl !== null ? `<div class="field-item"><div class="field-label">P&L</div><div class="field-value ${t.pnl >= 0 ? 'call' : 'put'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl?.toFixed(0)}</div></div>` : ''}
+    </div>
+    <hr>
+    <div class="section-title">// Análisis Original</div>
+    <div style="font-size:13px; color:var(--muted); line-height:1.7; font-style:italic">"${t.raw_analysis}"</div>
+    ${closeSection}
+    ${postSection}
+  `;
+}
+
+async function closeTrade(id, tesisCorrecto) {
+  const btns = document.querySelectorAll('.tesis-btn');
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Cerrando...'; });
+
+  const res = await fetch(API + `/api/trades/${id}/close`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tesis_correct: tesisCorrecto })
+  });
+  const data = await res.json();
+
+  document.querySelector('.tesis-check').innerHTML = `
+    <div style="width:100%">
+      <div class="pnl-display ${(data.pnl||0) >= 0 ? 'pnl-positive' : 'pnl-negative'}" style="font-size:20px; margin-bottom:12px">
+        ${(data.pnl||0) >= 0 ? '+' : ''}$${(data.pnl||0).toFixed(0)} (${(data.pnl_pct||0).toFixed(0)}%)
+      </div>
+      <div class="section-title">// Análisis Post-Trade</div>
+      <div class="post-analysis-box">${data.post_analysis}</div>
+    </div>`;
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────
+async function loadStats() {
+  const area = document.getElementById('statsArea');
+  area.innerHTML = '<div class="empty-state"><div class="spinner" style="width:24px;height:24px;margin:0 auto"></div></div>';
+
+  const res = await fetch(API + '/api/stats');
+  const data = await res.json();
+
+  if (data.message) {
+    area.innerHTML = `<div class="empty-state"><div class="big">📊</div>${data.message}</div>`;
+    return;
+  }
+
+  const pnlClass = (data.total_pnl || 0) >= 0 ? 'call' : 'put';
+
+  area.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-number">${data.total_trades}</span>
+        <span class="stat-label">Total Trades</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" style="color:var(--accent)">${data.win_rate}%</span>
+        <span class="stat-label">Win Rate</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" style="color:var(--accent3)">${data.tesis_hit_rate}%</span>
+        <span class="stat-label">Tesis Correcta</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" class="${pnlClass}" style="color:${data.total_pnl >= 0 ? 'var(--accent)' : 'var(--accent2)'}">
+          ${data.total_pnl >= 0 ? '+' : ''}$${data.total_pnl?.toFixed(0)}
+        </span>
+        <span class="stat-label">P&L Total</span>
+      </div>
+    </div>
+
+    <div class="section-title">// Análisis de Patrones (IA)</div>
+    <div class="analysis-box">${data.ai_analysis || '—'}</div>
+
+    ${data.catalyst_stats && Object.keys(data.catalyst_stats).length ? `
+    <div class="section-title">// Por Catalizador</div>
+    <div class="trades-list">
+      ${Object.entries(data.catalyst_stats).map(([cat, s]) => `
+        <div class="trade-card" style="cursor:default">
+          <div class="trade-header">
+            <span>${cat}</span>
+            <span class="pnl-display ${s.wins/s.total >= 0.5 ? 'pnl-positive' : 'pnl-negative'}">
+              ${Math.round(s.wins/s.total*100)}% (${s.wins}/${s.total})
+            </span>
+          </div>
+        </div>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+// Enter key to submit
+document.getElementById('mainInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    analyze();
+  }
+});
+</script>
+</body>
+</html>
