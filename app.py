@@ -4,7 +4,21 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import anthropic
 import yfinance as yf
-from scipy.stats import norm
+
+def _erf(x):
+    a1,a2,a3,a4,a5 = 0.254829592,-0.284496736,1.421413741,-1.453152027,1.061405429
+    p = 0.3275911
+    sign = 1 if x >= 0 else -1
+    x = abs(x)
+    t = 1.0/(1.0+p*x)
+    y = 1.0-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*math.exp(-x*x)
+    return sign*y
+
+def norm_cdf(x):
+    return 0.5*(1.0+_erf(x/math.sqrt(2.0)))
+
+def norm_pdf(x):
+    return math.exp(-0.5*x*x)/math.sqrt(2.0*math.pi)
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
@@ -61,13 +75,13 @@ def bs_call_price(S, K, T, r=0.045, sigma=0.185):
     if T <= 0: return max(S - K, 0)
     d1 = (math.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*math.sqrt(T))
     d2 = d1 - sigma*math.sqrt(T)
-    return S*norm.cdf(d1) - K*math.exp(-r*T)*norm.cdf(d2)
+    return S*norm_cdf(d1) - K*math.exp(-r*T)*norm_cdf(d2)
 
 def bs_put_price(S, K, T, r=0.045, sigma=0.185):
     if T <= 0: return max(K - S, 0)
     d1 = (math.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*math.sqrt(T))
     d2 = d1 - sigma*math.sqrt(T)
-    return K*math.exp(-r*T)*norm.cdf(-d2) - S*norm.cdf(-d1)
+    return K*math.exp(-r*T)*norm_cdf(-d2) - S*norm_cdf(-d1)
 
 def get_live_price(ticker):
     try:
