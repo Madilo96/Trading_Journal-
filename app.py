@@ -96,7 +96,7 @@ def claude_extract_trade(raw_text, current_price=None):
     price_context = f" El precio actual del activo mencionado es ${current_price:.2f}." if current_price else ""
     
     resp = client.messages.create(
-        model='claude-sonnet-4-20250514',
+        model='claude-haiku-4-5-20251001',
         max_tokens=1000,
         system="""Eres un asistente de trading que extrae información estructurada de análisis en lenguaje natural.
 Responde SOLO con JSON válido, sin texto adicional, sin markdown.
@@ -123,7 +123,7 @@ Extrae estos campos:
 def claude_post_analysis(trade_data, price_history):
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     resp = client.messages.create(
-        model='claude-sonnet-4-20250514',
+        model='claude-haiku-4-5-20251001',
         max_tokens=800,
         system="""Eres un asistente de trading que analiza operaciones pasadas de forma objetiva y concisa.
 Tu rol es explicar POR QUÉ salió bien o mal la operación basándote en los datos.
@@ -142,7 +142,7 @@ Analiza por qué salió así."""}]
 def claude_stats_analysis(trades_summary):
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     resp = client.messages.create(
-        model='claude-sonnet-4-20250514',
+        model='claude-haiku-4-5-20251001',
         max_tokens=600,
         system="""Analiza las estadísticas de trading de forma objetiva. 
 Identifica patrones: qué tipo de catalizadores funcionan más, en qué timeframes hay mejor hit rate, etc.
